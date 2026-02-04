@@ -1,0 +1,4 @@
+# Shared Lambda Layer Dependencies
+# boto3 is NOT included - it's already provided by AWS Lambda runtime
+pyarrow>=14.0.0
+

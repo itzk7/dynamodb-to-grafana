@@ -1,0 +1,18 @@
+apiVersion: 1
+
+datasources:
+  - name: Athena - E-commerce Analytics
+    type: grafana-athena-datasource
+    access: proxy
+    isDefault: true
+    jsonData:
+      authType: keys
+      defaultRegion: us-east-1
+      catalog: AwsDataCatalog
+      database: ecommerce-analytics-gold-dev  # Your Gold database name
+      workgroup: ecommerce-analytics-workgroup-dev
+      outputLocation: s3://ddb-analytics-athena-results-260741046218/grafana-queries/
+    secureJsonData:
+      accessKey: ${AWS_ACCESS_KEY}  # Replace with your AWS access key
+      secretKey: ${AWS_SECRET_KEY}  # Replace with your AWS secret key
+    editable: true

@@ -1,0 +1,59 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/  # Virtual environment for build script
+ENV/
+*.egg-info/
+dist/
+build/
+scripts/venv/  # Build script venv
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+.terraform.lock.hcl
+terraform.tfvars
+*.tfplan
+
+# Lambda
+lambda/*/deployment.zip
+lambda/layers/python_deps.zip
+lambda/layers/python/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Temporary files
+/tmp/
+*.tmp
+
+# AWS
+.aws/
+
+# Environment variables
+.env
+.env.local
+
+
+
+
+*.zip
+six.py
+
+*.md
