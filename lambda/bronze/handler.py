@@ -7,6 +7,7 @@ import os
 import boto3
 from datetime import datetime
 import io
+import uuid
 import pyarrow as pa
 import pyarrow.parquet as pq
 
@@ -65,10 +66,12 @@ def lambda_handler(event, context):
     if not records:
         return {'statusCode': 200, 'body': 'No records to process'}
     
-    # Partition by processing time (simple approach)
+    # Partition by processing time with UUID to prevent same-second collisions
     now = datetime.utcnow()
     table_name = records[0]['_table_name']
-    s3_key = f"{S3_PREFIX}/{table_name}/year={now.year}/month={now.month:02d}/day={now.day:02d}/{now.strftime('%Y%m%d%H%M%S')}.parquet"
+    batch_id = uuid.uuid4().hex[:8]
+    s3_key = f"{S3_PREFIX}/{table_name}/year={now.year}/month={now.month:02d}/day={now.day:02d}/{now.strftime('%Y%m%d%H%M%S')}_{batch_id}.parquet"
+    print(f"Writing batch_id={batch_id}, records={len(records)}, key={s3_key}")
     
     # Write to S3 as Parquet
     table = pa.Table.from_pylist(records)

@@ -134,26 +134,29 @@ resource "aws_lambda_function" "silver_processor" {
   }
 }
 
-# S3 Event Notification for Silver Processing
-resource "aws_s3_bucket_notification" "bronze_notification" {
-  bucket = aws_s3_bucket.data_lake.id
+# EventBridge Rule for Silver Layer Processing (Every 30 minutes)
+resource "aws_cloudwatch_event_rule" "silver_processing_schedule" {
+  name                = "${var.project_name}-silver-processing-${var.environment}"
+  description         = "Trigger silver layer processing every 30 minutes"
+  schedule_expression = "rate(30 minutes)"
 
-  lambda_function {
-    lambda_function_arn = aws_lambda_function.silver_processor.arn
-    events              = ["s3:ObjectCreated:*"]
-    filter_prefix       = "bronze/"
-    filter_suffix       = ".parquet"
+  tags = {
+    Name = "Silver Processing Schedule"
   }
-
-  depends_on = [aws_lambda_permission.allow_s3_invoke_silver]
 }
 
-resource "aws_lambda_permission" "allow_s3_invoke_silver" {
-  statement_id  = "AllowExecutionFromS3"
+resource "aws_cloudwatch_event_target" "silver_processing_target" {
+  rule      = aws_cloudwatch_event_rule.silver_processing_schedule.name
+  target_id = "SilverProcessorLambda"
+  arn       = aws_lambda_function.silver_processor.arn
+}
+
+resource "aws_lambda_permission" "allow_eventbridge_invoke_silver" {
+  statement_id  = "AllowExecutionFromEventBridge"
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.silver_processor.function_name
-  principal     = "s3.amazonaws.com"
-  source_arn    = aws_s3_bucket.data_lake.arn
+  principal     = "events.amazonaws.com"
+  source_arn    = aws_cloudwatch_event_rule.silver_processing_schedule.arn
 }
 
 # Gold Layer Lambda Function
@@ -179,6 +182,7 @@ resource "aws_lambda_function" "gold_processor" {
       GOLD_DATABASE          = aws_glue_catalog_database.gold.name
       ATHENA_WORKGROUP       = aws_athena_workgroup.main.name
       ATHENA_OUTPUT_LOCATION = "s3://${aws_s3_bucket.athena_results.bucket}/gold-processing/"
+      REFRESH_DAYS           = "3"
       ENVIRONMENT            = var.environment
     }
   }
@@ -216,7 +220,3 @@ resource "aws_lambda_permission" "allow_eventbridge_invoke_gold" {
   principal     = "events.amazonaws.com"
   source_arn    = aws_cloudwatch_event_rule.gold_processing_schedule.arn
 }
-
-
-
-

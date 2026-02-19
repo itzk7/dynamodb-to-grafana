@@ -1,12 +1,4 @@
-# ============================================================================
-# Explicit Table Definitions for All Layers (No Crawlers)
-# All tables use partitioned Parquet format for optimal performance
-# ============================================================================
-
-# ============================================================================
 # BRONZE LAYER - Raw CDC Events
-# ============================================================================
-
 resource "aws_glue_catalog_table" "bronze_orders" {
   database_name = aws_glue_catalog_database.bronze.name
   name          = "orders"
@@ -243,28 +235,3 @@ resource "aws_glue_catalog_table" "bronze_customers" {
     "storage.location.template" = "s3://${aws_s3_bucket.data_lake.bucket}/bronze/customers/year=$${year}/month=$${month}/day=$${day}"
   }
 }
-
-# ============================================================================
-# SILVER LAYER - Cleansed and Enriched Data (Created dynamically by Lambda)
-# ============================================================================
-# 
-# Silver tables are created dynamically by the silver lambda using MERGE operations:
-#   - orders_enriched: Iceberg table with MERGE deduplication
-#   - products_enriched: Iceberg table with MERGE deduplication  
-#   - customers_enriched: Iceberg table with MERGE deduplication
-#
-# The MERGE command automatically creates proper Iceberg tables with metadata,
-# so no Terraform definitions needed. Attempting to pre-create them via Terraform
-# causes "Iceberg type table without metadata location" errors.
-
-# ============================================================================
-# GOLD LAYER - Aggregated Metrics (Created dynamically by Lambda)
-# ============================================================================
-# 
-# Gold tables are created dynamically by the gold lambda using CTAS queries:
-#   - daily_sales_by_region: Delta refresh (90 days history, updates last 3 days)
-#   - product_performance: Full refresh each run (small dataset)
-#   - key_metrics: Full refresh (current KPIs: today, 7d, 30d, 90d)
-#
-# This approach is simpler for demos/blog posts and avoids Iceberg complexity
-# while still demonstrating medallion architecture and aggregation patterns.
